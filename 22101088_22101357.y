@@ -138,11 +138,12 @@ parameter_list : parameter_list COMMA type_specifier ID
 			$$ = new symbol_info($1->getname() + "," + $3->getname() + " " + $4->getname(), "param_list");
 			pair<string, string> param($3->getname(), $4->getname());
 			if(!current_func_params.empty()) {
-				for(auto param : current_func_params) {
-					if(param.second==$4->getname()) {
-						outlog << "At line no: " << lines << ": Multiple declaration of parameter " << $4->getname() << " in a parameter of " << current_func_name <<endl << endl;
-						errlog << "At line no: " << lines << ": Multiple declaration of parameter " << $4->getname() << " in a parameter of " << current_func_name <<endl << endl;
+				for(auto p : current_func_params) {
+					if(p.second==$4->getname()) {
+						outlog << "At line no: " << lines << ": Multiple declaration of variable " << $4->getname() << " in parameter of " << current_func_name <<endl << endl;
+						errlog << "At line no: " << lines << ": Multiple declaration of variable " << $4->getname() << " in parameter of " << current_func_name <<endl << endl;
 						error_count++;
+						break;
 					}
 				}
 			}
@@ -220,6 +221,13 @@ var_declaration : type_specifier declaration_list SEMICOLON
 		 {
 			outlog << "At line no: " << lines << " var_declaration : type_specifier declaration_list SEMICOLON " << endl << endl;
 			outlog << $1->getname() << " " << $2->getname() << ";" << endl << endl;
+			
+			if (current_type == "void") {
+				outlog << "At line no: " << lines << ": variable type can not be void " << endl << endl;
+				errlog << "At line no: " << lines << ": variable type can not be void " << endl << endl;
+				error_count++;
+			}
+			
 			$$ = new symbol_info($1->getname() + " " + $2->getname() + ";", "var_decl");
 		 }
 		 ;
@@ -257,7 +265,7 @@ declaration_list : declaration_list COMMA ID
 					outlog << "At line no: " << lines << ": Multiple declaration of variable " << var_name << endl << endl;
 					errlog << "At line no: " << lines << ": Multiple declaration of variable " << var_name << endl << endl;
 					error_count++;
-				} else {
+				} else if (current_type != "void") {
 					symbol_info* var_symbol = new symbol_info(var_name, "ID");
 					var_symbol->set_symbol_type("variable");
 					var_symbol->set_data_type(current_type);
@@ -274,7 +282,7 @@ declaration_list : declaration_list COMMA ID
 					outlog << "At line no: " << lines << ": Multiple declaration of variable " << var_name << endl << endl;
 					errlog << "At line no: " << lines << ": Multiple declaration of variable " << var_name << endl << endl;
 					error_count++;
-				} else {
+				} else if (current_type != "void") {
 					symbol_info* var_symbol = new symbol_info(var_name, "ID");
 					var_symbol->set_symbol_type("array");
 					var_symbol->set_data_type(current_type);
@@ -292,7 +300,7 @@ declaration_list : declaration_list COMMA ID
 					outlog << "At line no: " << lines << ": Multiple declaration of variable " << var_name << endl << endl;
 					errlog << "At line no: " << lines << ": Multiple declaration of variable " << var_name << endl << endl;
 					error_count++;
-				} else {
+				} else if (current_type != "void") {
 					symbol_info* var_symbol = new symbol_info(var_name, "ID");
 					var_symbol->set_symbol_type("variable");
 					var_symbol->set_data_type(current_type);
@@ -309,7 +317,7 @@ declaration_list : declaration_list COMMA ID
 					outlog << "At line no: " << lines << ": Multiple declaration of variable " << var_name << endl << endl;
 					errlog << "At line no: " << lines << ": Multiple declaration of variable " << var_name << endl << endl;
 					error_count++;
-				} else {
+				} else if (current_type != "void") {
 					symbol_info* var_symbol = new symbol_info(var_name, "ID");
 					var_symbol->set_symbol_type("array");
 					var_symbol->set_data_type(current_type);
@@ -379,6 +387,14 @@ statement : var_declaration
 	  {
 			outlog << "At line no: " << lines << " statement : PRINTLN LPAREN ID RPAREN SEMICOLON " << endl << endl;
 			outlog << "printf(" << $3->getname() << ");" << endl << endl;
+			
+			symbol_info *var_info = get_variable_info($3->getname());
+			if (var_info == NULL) {
+				outlog << "At line no: " << lines << " Undeclared variable " << $3->getname() << endl << endl;
+				errlog << "At line no: " << lines << " Undeclared variable " << $3->getname() << endl << endl;
+				error_count++;
+			}
+			
 			$$ = new symbol_info("printf(" + $3->getname() + ");", "stmnt");
 	  }
 	  | RETURN expression SEMICOLON
@@ -419,8 +435,8 @@ variable : ID
 			$$->set_data_type(var_info->get_data_type());
 		}
 		if (var_info!=NULL && var_info->get_symbol_type() == "array"){
-			outlog << "At line no: " << lines << " Variable is of array type: " << $1->getname()<< endl << endl;
-			errlog << "At line no: " << lines << " Variable is of array type: " << $1->getname()<< endl << endl;
+			outlog << "At line no: " << lines << " variable is of array type : " << $1->getname()<< endl << endl;
+			errlog << "At line no: " << lines << " variable is of array type : " << $1->getname()<< endl << endl;
 			error_count++;
 		}
 	  }
@@ -432,13 +448,13 @@ variable : ID
 		$$ = new symbol_info($1->getname() + "[" + $3->getname() + "]", "varbl");
 		$$->set_data_type(var_info? var_info->get_data_type() : "int");
 		if (!var_info || var_info->get_symbol_type() != "array"){
-			outlog << "At line no: " << lines << " " <<$1->getname() << " is not an array" << endl << endl;
-			errlog << "At line no: " << lines << " " <<$1->getname() << " is not an array" << endl << endl;
+			outlog << "At line no: " << lines << " variable is not of array type : " << $1->getname() << endl << endl;
+			errlog << "At line no: " << lines << " variable is not of array type : " << $1->getname() << endl << endl;
 			error_count++;
 		}
 		if ($3->get_data_type() == "float") {
-			outlog << "At line no: " << lines << " Array index not an integer" << endl << endl;
-			errlog << "At line no: " << lines << " Array index not an integer" << endl << endl;
+			outlog << "At line no: " << lines << " array index is not of integer type : " << $1->getname() << endl << endl;
+			errlog << "At line no: " << lines << " array index is not of integer type : " << $1->getname() << endl << endl;
 			error_count++;
 		}
 	  }
@@ -461,20 +477,19 @@ expression : logic_expression
 				errlog << "At line no: " << lines << " Array assignment error" << endl << endl;
 				error_count++;
 			}
-			if (var_info && var_info->get_data_type() == "int" && $3->get_data_type() == "float") {
-				outlog << "At line no: " << lines << " Warning: possible loss of data in assignment of FLOAT to INT" << endl << endl;
-			}
-			if (var_info && $3->get_symbol_type() == "function") {
-				if ($1->get_data_type() != $3->get_return_type()) {
-					outlog << "At line no: " << lines << " Type mismatch in assignment " << endl << endl;
-					errlog << "At line no: " << lines << " Type mismatch in assignment " << endl << endl;
-					error_count++;
-				}
-			} else if (var_info && $1->get_data_type() != $3->get_data_type()) {
-				outlog << "At line no: " << lines << " Warning: Assignment of " << $3->get_data_type()<<" value into variable of "<<$1->get_data_type()<<" type" << endl << endl;
-				errlog << "At line no: " << lines << " Warning: Assignment of " << $3->get_data_type()<<" value into variable of "<<$1->get_data_type()<<" type" << endl << endl;
+			
+			if ($3->get_symbol_type() == "function" && $3->get_return_type() == "void") {
+				outlog << "At line no: " << lines << " operation on void type " << endl << endl;
+				errlog << "At line no: " << lines << " operation on void type " << endl << endl;
 				error_count++;
 			}
+			
+			if (var_info && var_info->get_data_type() == "int" && $3->get_data_type() == "float") {
+				outlog << "At line no: " << lines << " Warning: Assignment of float value into variable of integer type" << endl << endl;
+				errlog << "At line no: " << lines << " Warning: Assignment of float value into variable of integer type" << endl << endl;
+				error_count++;
+			}
+			
 			$$ = new symbol_info($1->getname() + "=" + $3->getname(), "expr");
 	   }
 	   ;
@@ -625,16 +640,16 @@ factor	: variable
 		symbol_info* var_info = get_variable_info($1->getname());
 		$$ = new symbol_info($1->getname() + "(" + $3->getname() + ")", "fctr");
 		if (var_info==NULL){ 
-			outlog << "At line no: " << lines << " Undeclared function " << $1->getname() << endl << endl;
-			errlog << "At line no: " << lines << " Undeclared function " << $1->getname() << endl << endl;
+			outlog << "At line no: " << lines << " Undeclared function: " << $1->getname() << endl << endl;
+			errlog << "At line no: " << lines << " Undeclared function: " << $1->getname() << endl << endl;
 			error_count++;
 		}else if (var_info!=NULL && var_info->get_symbol_type() == "function"){
 			$$->set_symbol_type("function");
 			$$->set_return_type(var_info->get_return_type());
 			$$->set_data_type(var_info->get_return_type());
 			if (current_func_params.size()!=var_info->get_parameters().size()){
-				outlog << "At line no: " << lines << " Inconsistencies in number of arguments in function call : " <<  $1->getname() << endl << endl;
-				errlog << "At line no: " << lines << " Inconsistencies in number of arguments in function call : " <<  $1->getname() << endl << endl;
+				outlog << "At line no: " << lines << " Inconsistencies in number of arguments in function call: " <<  $1->getname() << endl << endl;
+				errlog << "At line no: " << lines << " Inconsistencies in number of arguments in function call: " <<  $1->getname() << endl << endl;
 				error_count++;
 			}
 			else if(current_func_params.size()==var_info->get_parameters().size()){
@@ -642,14 +657,14 @@ factor	: variable
 					symbol_info* v_info = get_variable_info(current_func_params[i].first);
 					if (v_info!= NULL && v_info->get_symbol_type() != "array" ){
 						if (current_func_params[i].second!=var_info->get_parameters()[i].first){
-							outlog << "At line no: " << lines << " argument "<< i+1 << " type mismatch in function call : " <<  $1->getname() << endl << endl;
-							errlog << "At line no: " << lines << " argument "<< i+1 << " type mismatch in function call : " <<  $1->getname() << endl << endl;
+							outlog << "At line no: " << lines << " argument "<< i+1 << " type mismatch in function call: " <<  $1->getname() << endl << endl;
+							errlog << "At line no: " << lines << " argument "<< i+1 << " type mismatch in function call: " <<  $1->getname() << endl << endl;
 							error_count++;
 						}
 					}else if (v_info==NULL){
 						if (current_func_params[i].second!=var_info->get_parameters()[i].first && current_func_params[i].second!="array"){
-							outlog << "At line no: " << lines << " argument "<< i+1 << " type mismatch in function call : " <<  $1->getname() << endl << endl;
-							errlog << "At line no: " << lines << " argument "<< i+1 << " type mismatch in function call : " <<  $1->getname() << endl << endl;
+							outlog << "At line no: " << lines << " argument "<< i+1 << " type mismatch in function call: " <<  $1->getname() << endl << endl;
+							errlog << "At line no: " << lines << " argument "<< i+1 << " type mismatch in function call: " <<  $1->getname() << endl << endl;
 							error_count++;
 						}
 					}
