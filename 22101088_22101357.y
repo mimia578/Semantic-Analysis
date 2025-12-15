@@ -426,12 +426,34 @@ statement : var_declaration
 	    	outlog << "At line no: " << lines << " statement : FOR LPAREN expression_statement expression_statement expression RPAREN statement " << endl << endl;
 			outlog << "for(" << $3->getname() << $4->getname() << $5->getname() << ")\n" << $7->getname() << endl << endl;
 			
+			// Check for void function in condition (the second expression_statement is the condition)
+			// $4 is the condition expression_statement
+			if ($4->get_data_type() == "void" && $4->getname() != ";") {
+				outlog << "At line no: " << lines << " A void function cannot be called as a part of an expression " << endl << endl;
+				errlog << "At line no: " << lines << " A void function cannot be called as a part of an expression " << endl << endl;
+				error_count++;
+			}
+			
+			// Also check the increment expression ($5)
+			if ($5->get_data_type() == "void") {
+				outlog << "At line no: " << lines << " A void function cannot be called as a part of an expression " << endl << endl;
+				errlog << "At line no: " << lines << " A void function cannot be called as a part of an expression " << endl << endl;
+				error_count++;
+			}
+			
 			$$ = new symbol_info("for(" + $3->getname() + $4->getname() + $5->getname() + ")\n" + $7->getname(), "stmnt");
 	  }
 	  | IF LPAREN expression RPAREN statement %prec LOWER_THAN_ELSE
 	  {
 	    	outlog << "At line no: " << lines << " statement : IF LPAREN expression RPAREN statement " << endl << endl;
 			outlog << "if(" << $3->getname() << ")\n" << $5->getname() << endl << endl;
+			
+			// Check for void function in condition
+			if ($3->get_data_type() == "void") {
+				outlog << "At line no: " << lines << " A void function cannot be called as a part of an expression " << endl << endl;
+				errlog << "At line no: " << lines << " A void function cannot be called as a part of an expression " << endl << endl;
+				error_count++;
+			}
 			
 			$$ = new symbol_info("if(" + $3->getname() + ")\n" + $5->getname(), "stmnt");
 	  }
@@ -440,12 +462,26 @@ statement : var_declaration
 	    	outlog << "At line no: " << lines << " statement : IF LPAREN expression RPAREN statement ELSE statement " << endl << endl;
 			outlog << "if(" << $3->getname() << ")\n" << $5->getname() << "\nelse\n" << $7->getname() << endl << endl;
 			
+			// Check for void function in condition
+			if ($3->get_data_type() == "void") {
+				outlog << "At line no: " << lines << " A void function cannot be called as a part of an expression " << endl << endl;
+				errlog << "At line no: " << lines << " A void function cannot be called as a part of an expression " << endl << endl;
+				error_count++;
+			}
+			
 			$$ = new symbol_info("if(" + $3->getname() + ")\n" + $5->getname() + "\nelse\n" + $7->getname(), "stmnt");
 	  }
 	  | WHILE LPAREN expression RPAREN statement
 	  {
 	    	outlog << "At line no: " << lines << " statement : WHILE LPAREN expression RPAREN statement " << endl << endl;
 			outlog << "while(" << $3->getname() << ")\n" << $5->getname() << endl << endl;
+			
+			// Check for void function in condition
+			if ($3->get_data_type() == "void") {
+				outlog << "At line no: " << lines << " A void function cannot be called as a part of an expression " << endl << endl;
+				errlog << "At line no: " << lines << " A void function cannot be called as a part of an expression " << endl << endl;
+				error_count++;
+			}
 			
 			$$ = new symbol_info("while(" + $3->getname() + ")\n" + $5->getname(), "stmnt");
 	  }
@@ -478,6 +514,7 @@ expression_statement : SEMICOLON
 				outlog << ";" << endl << endl;
 				
 				$$ = new symbol_info(";", "expr_stmt");
+				$$->set_data_type("void"); // Empty statement has no type
 	        }			
 			| expression SEMICOLON 
 			{
@@ -485,6 +522,7 @@ expression_statement : SEMICOLON
 				outlog << $1->getname() << ";" << endl << endl;
 				
 				$$ = new symbol_info($1->getname() + ";", "expr_stmt");
+				$$->set_data_type($1->get_data_type()); // Propagate type from expression
 	        }
 			;
 	  
@@ -561,6 +599,11 @@ expression : logic_expression
 					outlog << "At line no: " << lines << " Warning: Assignment of float value into variable of integer type " << endl << endl;
 					errlog << "At line no: " << lines << " Warning: Assignment of float value into variable of integer type " << endl << endl;
 					error_count++;
+				} else {
+					// Other type mismatches should generate errors
+					outlog << "At line no: " << lines << " Type mismatch in assignment: " << $1->get_data_type() << " and " << $3->get_data_type() << endl << endl;
+					errlog << "At line no: " << lines << " Type mismatch in assignment: " << $1->get_data_type() << " and " << $3->get_data_type() << endl << endl;
+					error_count++;
 				}
 			}
 
@@ -618,6 +661,15 @@ simple_expression : term
 			outlog << $1->getname() << $2->getname() << $3->getname() << endl << endl;
 			
 			$$ = new symbol_info($1->getname() + $2->getname() + $3->getname(), "simp_expr");
+			
+			// Type propagation: if both are int, result is int; if either is float, result is float
+			if ($1->get_data_type() == "float" || $3->get_data_type() == "float") {
+				$$->set_data_type("float");
+			} else if ($1->get_data_type() == "int" && $3->get_data_type() == "int") {
+				$$->set_data_type("int");
+			} else {
+				$$->set_data_type($1->get_data_type());
+			}
 	      }
 		  ;
 					
@@ -644,7 +696,21 @@ term : unary_expression
 				error_count++;
 			}
 
+			// Type propagation for multiplication/division
+			if ($2->getname() == "*" || $2->getname() == "/") {
+				if ($1->get_data_type() == "float" || $3->get_data_type() == "float") {
+					$$->set_data_type("float");
+				} else if ($1->get_data_type() == "int" && $3->get_data_type() == "int") {
+					$$->set_data_type("int");
+				} else {
+					$$->set_data_type($1->get_data_type());
+				}
+			} else {
+				$$->set_data_type($1->get_data_type());
+			}
+
 			if ($2->getname() == "/") {
+				// Check for division by 0 - check literal 0
 				if ($3->getname() == "0") {
 					outlog << "At line no: " << lines << " Division by 0" << endl << endl;
 					errlog << "At line no: " << lines << " Division by 0" << endl << endl;
@@ -653,6 +719,7 @@ term : unary_expression
 			}
 			
 			if ($2->getname() == "%") {
+				// Check for modulus by 0 - check literal 0
 				if ($3->getname() == "0") {
 					outlog << "At line no: " << lines << " Modulus by 0 " << endl << endl;
 					errlog << "At line no: " << lines << " Modulus by 0 " << endl << endl;
@@ -662,6 +729,8 @@ term : unary_expression
 					outlog << "At line no: " << lines << " Modulus operator on non integer type " << endl << endl;
 					errlog << "At line no: " << lines << " Modulus operator on non integer type " << endl << endl;
 					error_count++;
+				} else {
+					$$->set_data_type("int");
 				}
 			}
 	 }
