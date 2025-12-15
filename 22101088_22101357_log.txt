@@ -162,8 +162,16 @@ return 7;
 }
 
 ScopeTable # 2
-2 --> < c : VARIABLE, Type: int > 
-3 --> < d : VARIABLE, Type: int > 
+2 --> 
+< c : ID >
+Variable
+Type: int
+
+3 --> 
+< d : ID >
+Variable
+Type: int
+
 
 Scopetable with ID 2 removed
 
@@ -307,8 +315,16 @@ return a+3;
 }
 
 ScopeTable # 3
-0 --> < a : VARIABLE, Type: int > 
-1 --> < b : VARIABLE, Type: float > 
+0 --> 
+< a : ID >
+Variable
+Type: int
+
+1 --> 
+< b : ID >
+Variable
+Type: float
+
 
 Scopetable with ID 3 removed
 
@@ -428,7 +444,11 @@ y=6;
 }
 
 ScopeTable # 4
-0 --> < a : VARIABLE, Type: int > 
+0 --> 
+< a : ID >
+Variable
+Type: int
+
 
 Scopetable with ID 4 removed
 
@@ -499,7 +519,7 @@ At line no: 16 parameter_list : parameter_list COMMA type_specifier ID
 
 int a,int a
 
-At line no: 16: Multiple declaration of variable a in parameter of foo
+At line no: 16 Multiple declaration of variable a in parameter of foo
 
 Line no 16: Token <COMMA> Lexeme , found
 
@@ -596,8 +616,16 @@ return a+2;
 }
 
 ScopeTable # 5
-0 --> < a : VARIABLE, Type: int > 
-1 --> < b : VARIABLE, Type: float > 
+0 --> 
+< a : ID >
+Variable
+Type: int
+
+1 --> 
+< b : ID >
+Variable
+Type: float
+
 
 Scopetable with ID 5 removed
 
@@ -739,8 +767,16 @@ y=7;
 }
 
 ScopeTable # 6
-0 --> < a : VARIABLE, Type: int > 
-1 --> < b : VARIABLE, Type: int > 
+0 --> 
+< a : ID >
+Variable
+Type: int
+
+1 --> 
+< b : ID >
+Variable
+Type: int
+
 
 Scopetable with ID 6 removed
 
@@ -807,7 +843,7 @@ int d
 
 Line no 24: Token <RPAREN> Lexeme ) found
 
-At line no: 24: Multiple declaration of function z
+At line no: 24 Multiple declaration of function z
 
 Line no 24: Token <LCURL> Lexeme { found
 
@@ -868,7 +904,11 @@ return d;
 }
 
 ScopeTable # 7
-3 --> < d : VARIABLE, Type: int > 
+3 --> 
+< d : ID >
+Variable
+Type: int
+
 
 Scopetable with ID 7 removed
 
@@ -998,7 +1038,11 @@ return a;
 }
 
 ScopeTable # 8
-0 --> < a : VARIABLE, Type: int > 
+0 --> 
+< a : ID >
+Variable
+Type: int
+
 
 Scopetable with ID 8 removed
 
@@ -1152,7 +1196,11 @@ return a+3;
 }
 
 ScopeTable # 9
-0 --> < a : VARIABLE, Type: int > 
+0 --> 
+< a : ID >
+Variable
+Type: int
+
 
 Scopetable with ID 9 removed
 
@@ -1237,8 +1285,6 @@ At line no: 37 declaration_list : ID
 
 a
 
-At line no: 37: Multiple declaration of variable a
-
 Line no 37: Token <ID> Lexeme b found
 
 Line no 37: Token <COMMA> Lexeme , found
@@ -1307,7 +1353,7 @@ At line no: 38 var_declaration : type_specifier declaration_list SEMICOLON
 
 void e;
 
-At line no: 38: variable type can not be void 
+At line no: 38 variable type can not be void 
 
 At line no: 38 statement : var_declaration 
 
@@ -1332,7 +1378,7 @@ At line no: 39 declaration_list : ID
 
 a
 
-At line no: 39: Multiple declaration of variable a
+At line no: 39 Multiple declaration of variable a
 
 Line no 39: Token <ID> Lexeme c found
 
@@ -1346,7 +1392,7 @@ At line no: 39 declaration_list : declaration_list COMMA ID LTHIRD CONST_INT RTH
 
 a,c[7]
 
-At line no: 39: Multiple declaration of variable c
+At line no: 39 Multiple declaration of variable c
 
 Line no 39: Token <SEMICOLON> Lexeme ; found
 
@@ -1579,7 +1625,7 @@ At line no: 44 factor : ID LPAREN argument_list RPAREN
 
 correct_foo(a,c)
 
-At line no: 44 argument 1 type mismatch in function call: correct_foo
+At line no: 44 argument 2 type mismatch in function call: correct_foo
 
 At line no: 44 unary_expression : factor 
 
@@ -2125,7 +2171,7 @@ At line no: 50 term : term MULOP unary_expression
 
 5*foo4(7)
 
-At line no: 50 operation on void type
+At line no: 50 operation on void type 
 
 Line no 50: Token <SEMICOLON> Lexeme ; found
 
@@ -2643,6 +2689,8 @@ At line no: 54 expression : variable ASSIGNOP logic_expression
 
 c[3]=2.7
 
+At line no: 54 Warning: Assignment of float value into variable of integer type 
+
 At line no: 54 expression_statement : expression SEMICOLON 
 
 c[3]=2.7;
@@ -2706,7 +2754,7 @@ At line no: 55 term : term MULOP unary_expression
 
 5%0
 
-At line no: 55 Modulus by 0
+At line no: 55 Modulus by 0 
 
 Line no 55: Token <SEMICOLON> Lexeme ; found
 
@@ -2790,7 +2838,7 @@ At line no: 56 term : term MULOP unary_expression
 
 2%3.5
 
-At line no: 56 Modulus operator on non integer type
+At line no: 56 Modulus operator on non integer type 
 
 Line no 56: Token <SEMICOLON> Lexeme ; found
 
@@ -3073,10 +3121,37 @@ return 0;
 }
 
 ScopeTable # 10
-1 --> < b : VARIABLE, Type: int > 
-2 --> < c : ARRAY, Type: int, Size: 4 > 
-3 --> < ee : VARIABLE, Type: int > 
-9 --> < dd : VARIABLE, Type: int > 
+0 --> 
+< a : ID >
+Variable
+Type: int
+
+1 --> 
+< b : ID >
+Variable
+Type: int
+
+2 --> 
+< c : ID >
+Array
+Type: int
+Size: 4
+
+3 --> 
+< ee : ID >
+Variable
+Type: int
+
+4 --> 
+< e : ID >
+Variable
+Type: void
+
+9 --> 
+< dd : ID >
+Variable
+Type: int
+
 
 Scopetable with ID 10 removed
 
@@ -3191,31 +3266,84 @@ return 0;
 
 At line no: 64 start : program 
 
-################################
 
-ScopeTable # 1
-0 --> < a : VARIABLE, Type: float > 
-1 --> < func : FUNCTION, Return Type: int, Parameters: (int c, int d) > < foo2 : FUNCTION, Return Type: int, Parameters: (int a, int a, float b) > 
-2 --> < foo3 : FUNCTION, Return Type: void, Parameters: (int a, int b) > 
-3 --> < x : VARIABLE, Type: int > < foo4 : FUNCTION, Return Type: void, Parameters: (int a) > 
-4 --> < y : VARIABLE, Type: int > < correct_foo : FUNCTION, Return Type: int, Parameters: (int a, float b) > < var : FUNCTION, Return Type: int, Parameters: (int a) > 
-5 --> < z : VARIABLE, Type: int > 
-6 --> < main : FUNCTION, Return Type: int, Parameters: () > 
-9 --> < foo : FUNCTION, Return Type: void, Parameters: (int a) > 
-
-################################
+Symbol Table
 
 ################################
 
 ScopeTable # 1
-0 --> < a : VARIABLE, Type: float > 
-1 --> < func : FUNCTION, Return Type: int, Parameters: (int c, int d) > < foo2 : FUNCTION, Return Type: int, Parameters: (int a, int a, float b) > 
-2 --> < foo3 : FUNCTION, Return Type: void, Parameters: (int a, int b) > 
-3 --> < x : VARIABLE, Type: int > < foo4 : FUNCTION, Return Type: void, Parameters: (int a) > 
-4 --> < y : VARIABLE, Type: int > < correct_foo : FUNCTION, Return Type: int, Parameters: (int a, float b) > < var : FUNCTION, Return Type: int, Parameters: (int a) > 
-5 --> < z : VARIABLE, Type: int > 
-6 --> < main : FUNCTION, Return Type: int, Parameters: () > 
-9 --> < foo : FUNCTION, Return Type: void, Parameters: (int a) > 
+0 --> 
+< a : ID >
+Variable
+Type: float
+
+1 --> 
+< func : ID >
+Function Definition
+Return Type: int
+Number of Parameters: 2
+Parameter Details: int c, int d
+
+< foo2 : ID >
+Function Definition
+Return Type: int
+Number of Parameters: 3
+Parameter Details: int a, int a, float b
+
+2 --> 
+< foo3 : ID >
+Function Definition
+Return Type: void
+Number of Parameters: 2
+Parameter Details: int a, int b
+
+3 --> 
+< x : ID >
+Variable
+Type: int
+
+< foo4 : ID >
+Function Definition
+Return Type: void
+Number of Parameters: 1
+Parameter Details: int a
+
+4 --> 
+< y : ID >
+Variable
+Type: int
+
+< correct_foo : ID >
+Function Definition
+Return Type: int
+Number of Parameters: 2
+Parameter Details: int a, float b
+
+< var : ID >
+Function Definition
+Return Type: int
+Number of Parameters: 1
+Parameter Details: int a
+
+5 --> 
+< z : ID >
+Variable
+Type: int
+
+6 --> 
+< main : ID >
+Function Definition
+Return Type: int
+Number of Parameters: 0
+Parameter Details: 
+
+9 --> 
+< foo : ID >
+Function Definition
+Return Type: void
+Number of Parameters: 1
+Parameter Details: int a
+
 
 ################################
 

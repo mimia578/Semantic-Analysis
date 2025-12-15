@@ -7,12 +7,12 @@ private:
     int unique_id;
     scope_table *parent_scope = NULL;
     vector<list<symbol_info *>> table;
-
+ 
     int hash_function(string name)
     {
         unsigned long hash = 5381;
         for (char c : name) {
-            hash = ((hash << 5) + hash) + c; // hash * 33 + c
+            hash = ((hash << 5) + hash) + c;
         }
         return hash % bucket_count;
     }
@@ -27,9 +27,8 @@ public:
     bool delete_from_scope(symbol_info* symbol);
     void print_scope_table(ofstream& outlog);
     ~scope_table();
-    //ennd of function dec
 };
- //finishing the function definitions
+
 scope_table::scope_table()
 {
     this->bucket_count = 10;
@@ -74,7 +73,7 @@ bool scope_table::insert_in_scope(symbol_info* symbol)
 {
     if (lookup_in_scope(symbol) != NULL)
     {
-        return false; // Symbol already exists in this scope
+        return false;
     }
     
     int bucket_index = hash_function(symbol->get_name());
@@ -105,16 +104,21 @@ void scope_table::print_scope_table(ofstream& outlog)
     {
         if (!table[i].empty())
         {
-            outlog << i << " --> ";
+            outlog << i << " --> " << endl;
+            
             for (auto it = table[i].begin(); it != table[i].end(); it++)
             {
-                outlog << "< " << (*it)->get_name();
+                outlog << "< " << (*it)->get_name() << " : " << (*it)->get_type() << " >" << endl;
                 
                 if ((*it)->get_symbol_type() == "function")
                 {
-                    outlog << " : FUNCTION, Return Type: " << (*it)->get_return_type();
-                    outlog << ", Parameters: (";
+                    outlog << "Function Definition" << endl;
+                    outlog << "Return Type: " << (*it)->get_return_type() << endl;
+                    
                     vector<pair<string, string>> params = (*it)->get_parameters();
+                    outlog << "Number of Parameters: " << params.size() << endl;
+                    outlog << "Parameter Details: ";
+                    
                     for (int j = 0; j < params.size(); j++)
                     {
                         outlog << params[j].first;
@@ -123,21 +127,21 @@ void scope_table::print_scope_table(ofstream& outlog)
                         if (j < params.size() - 1)
                             outlog << ", ";
                     }
-                    outlog << ")";
+                    outlog << endl;
                 }
                 else if ((*it)->get_symbol_type() == "array")
                 {
-                    outlog << " : ARRAY, Type: " << (*it)->get_data_type();
-                    outlog << ", Size: " << (*it)->get_array_size();
+                    outlog << "Array" << endl;
+                    outlog << "Type: " << (*it)->get_data_type() << endl;
+                    outlog << "Size: " << (*it)->get_array_size() << endl;
                 }
                 else if ((*it)->get_symbol_type() == "variable")
                 {
-                    outlog << " : VARIABLE, Type: " << (*it)->get_data_type();
+                    outlog << "Variable" << endl;
+                    outlog << "Type: " << (*it)->get_data_type() << endl;
                 }
-                
-                outlog << " > ";
+                outlog << endl;
             }
-            outlog << endl;
         }
     }
     outlog << endl;

@@ -54,6 +54,7 @@ public:
         return current_scope->insert_in_scope(symbol);
     }
     
+    // Lookup in ALL scopes (current and parent scopes)
     symbol_info* lookup(symbol_info* symbol)
     {
         string name = symbol->get_name();
@@ -68,6 +69,16 @@ public:
             temp = temp->get_parent_scope();  
         }
         return NULL;  
+    }
+
+    // Lookup ONLY in current scope - uses the existing scope_table method
+    symbol_info* lookup_current_scope(symbol_info* symbol)
+    {
+        if (current_scope == NULL)
+        {
+            return NULL;
+        }
+        return current_scope->lookup_in_scope(symbol);
     }
 
     void print_current_scope()
